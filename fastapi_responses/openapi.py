@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.openapi.utils import get_openapi
 
-from fastapi_responses.utils import inspect
+from fastapi_responses.utils import analyze
 
 
 def custom_openapi(app: FastAPI) -> callable:
@@ -15,7 +15,7 @@ def custom_openapi(app: FastAPI) -> callable:
             routes=app.routes,
         )
         app.openapi_schema = openapi_schema
-        inspect(app)
+        analyze(app)
         return app.openapi_schema
 
     return _custom_openapi

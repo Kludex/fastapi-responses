@@ -1,13 +1,25 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException
 from fastapi.testclient import TestClient
 from fastapi_responses import custom_openapi
 
 app = FastAPI()
 
 
+def raise_another():
+    raise HTTPException(status_code=200, detail="Another function!")
+
+
+def get_user():
+    raise HTTPException(status_code=201, detail="HAHA")
+
+
 @app.get("/")
-def home():
-    raise HTTPException(status_code=404)
+def home(item: int, user: str = Depends(get_user)):
+    if item == 1:
+        raise HTTPException(
+            status_code=404, detail="I need a really long sentence so I can analyze..."
+        )
+    raise_another()
 
 
 app.openapi = custom_openapi(app)
@@ -35,7 +47,7 @@ openapi_schema = {
 
 
 def test_simple_app():
-    openapi = client.get("/openapi.json")
+    openapi = client.get("/openapi.json/")
     print(openapi.json())
     assert openapi.json() == openapi_schema
     assert False
