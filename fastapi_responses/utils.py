@@ -57,7 +57,8 @@ def analyze(app: FastAPI):
                             if inspect.isclass(obj):
                                 statement = build_statement(token, tokens)
                                 http_exc = eval(statement)
-                                print(repr(http_exc))
+                                if isinstance(http_exc, HTTPException):
+                                    print(repr(http_exc))
                             if is_function_or_coroutine(obj) and obj is not endpoint:
                                 stack.put(obj)
                         except Exception:
