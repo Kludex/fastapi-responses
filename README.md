@@ -29,6 +29,8 @@ pip install fastapi-responses
 
 ## Usage
 
+The simplest use case happens when we have a single exception being raised. We don't want to document the possible response manually, so **FastAPI Responses** comes in handy.
+
 ``` python
 from fastapi import FastAPI, HTTPException
 from fastapi_responses import custom_openapi
