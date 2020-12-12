@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "fastapi-responses"
-version = "0.1.0"
+version = "0.2.0"
 description = "Extend OpenAPI schema to collect HTTPExceptions."
 authors = ["Marcelo Trylesinski <marcelotryle@gmail.com>"]
 readme = "README.md"
