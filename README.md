@@ -54,6 +54,12 @@ def get_item(item_id: int):
 
 <img src="./assets/with.jpg" width="1000" title="With FastAPI responses">
 
+## Roadmap
+
+- [X] Extract HTTPException from stack.
+- [ ] Extract any exception and document based on the `exception_handler` container.
+- [ ] Accept Python objects on `HTTPException` instantiation.
+
 ## License
 
 This project is licensed under the terms of the MIT license.
