@@ -20,16 +20,6 @@ def build_statement(exc: TokenInfo, tokens: Generator[TokenInfo, None, None]) ->
             return statement
 
 
-def get_dependencies(endpoint: Callable) -> List[Callable]:
-    dependencies = []
-    signature = inspect.signature(endpoint)
-    for param in signature.parameters.values():
-        default = param.default
-        if isinstance(default, Depends):
-            dependencies.append(default.dependency)
-    return dependencies
-
-
 def is_function_or_coroutine(obj):
     return isfunction(obj) or iscoroutinefunction(obj)
 
