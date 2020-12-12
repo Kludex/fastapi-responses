@@ -35,7 +35,7 @@ from fastapi_responses import custom_openapi
 
 app = FastAPI()
 
-app.openapi = custom_openapi
+app.openapi = custom_openapi(app)
 
 @app.get("/{item_id}")
 def get_item(item_id: int):
