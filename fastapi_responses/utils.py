@@ -1,16 +1,11 @@
 import importlib
 import inspect
 import tokenize
-import typing
-from collections import defaultdict
 from inspect import iscoroutinefunction, isfunction
 from io import BytesIO
-from queue import LifoQueue
-from tokenize import Token, TokenInfo
-from types import FunctionType
-from typing import Generator, Iterable, List, Tuple
+from tokenize import TokenInfo
+from typing import Callable, Generator, List, Tuple
 
-from fastapi import FastAPI
 from fastapi.params import Depends
 from fastapi.routing import APIRoute
 from starlette.exceptions import HTTPException
@@ -25,7 +20,7 @@ def build_statement(exc: TokenInfo, tokens: Generator[TokenInfo, None, None]) ->
             return statement
 
 
-def get_dependencies(endpoint: callable) -> callable:
+def get_dependencies(endpoint: Callable) -> List[Callable]:
     dependencies = []
     signature = inspect.signature(endpoint)
     for param in signature.parameters.values():
@@ -40,8 +35,8 @@ def is_function_or_coroutine(obj):
 
 
 def exceptions_functions(
-    endpoint: callable, tokens: Iterable[TokenInfo]
-) -> Tuple[List[Exception], List[callable]]:
+    endpoint: Callable, tokens: Generator[TokenInfo, None, None]
+) -> Tuple[List[Exception], List[Callable]]:
     exceptions, functions = [], []
     module = importlib.import_module(endpoint.__module__)
     try:

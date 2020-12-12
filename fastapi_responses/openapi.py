@@ -1,10 +1,12 @@
+from typing import Callable
+
 from fastapi import FastAPI
 from fastapi.openapi.utils import get_openapi
 
 from fastapi_responses.utils import extract_exceptions, write_response
 
 
-def custom_openapi(app: FastAPI) -> callable:
+def custom_openapi(app: FastAPI) -> Callable:
     def _custom_openapi() -> dict:
         if app.openapi_schema:
             return app.openapi_schema
@@ -14,7 +16,6 @@ def custom_openapi(app: FastAPI) -> callable:
             description=app.description,
             routes=app.routes,
         )
-
         for route in app.routes:
             if getattr(route, "include_in_schema", None):
                 for exception in extract_exceptions(route):
