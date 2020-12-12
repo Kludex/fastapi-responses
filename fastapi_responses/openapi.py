@@ -8,7 +8,7 @@ from fastapi_responses.utils import extract_exceptions, write_response
 
 def custom_openapi(app: FastAPI) -> Callable:
     def _custom_openapi() -> dict:
-        if app.openapi_schema:
+        if app.openapi_schema:  # pragma: no cover
             return app.openapi_schema
         openapi_schema = get_openapi(
             title=app.title,
