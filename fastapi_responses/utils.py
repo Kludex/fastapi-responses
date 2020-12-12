@@ -77,6 +77,6 @@ def write_response(api_schema: dict, route: APIRoute, exc: HTTPException) -> Non
     methods = [method.lower() for method in getattr(route, "methods")]
     for method in methods:
         if str(exc.status_code) not in api_schema["paths"][path][method]["responses"]:
-            api_schema["paths"][path][method]["responses"][exc.status_code] = {
+            api_schema["paths"][path][method]["responses"][str(exc.status_code)] = {
                 "description": exc.detail
             }
