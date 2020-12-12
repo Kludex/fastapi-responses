@@ -9,7 +9,11 @@ def raise_another():
     raise HTTPException(status_code=200, detail="Another function!")
 
 
-def get_user():
+async def get_another_user():
+    raise HTTPException(status_code=304, detail="Yet another function!")
+
+
+def get_user(opa: str = Depends(get_another_user)):
     raise HTTPException(status_code=201, detail="HAHA")
 
 

@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.openapi.utils import get_openapi
 
-from fastapi_responses.utils import analyze
+from fastapi_responses.utils import extract_exceptions, write_response
 
 
 def custom_openapi(app: FastAPI) -> callable:
@@ -14,8 +14,12 @@ def custom_openapi(app: FastAPI) -> callable:
             description=app.description,
             routes=app.routes,
         )
+
+        for route in app.routes:
+            if getattr(route, "include_in_schema", None):
+                for exception in extract_exceptions(route):
+                    write_response(openapi_schema, route, exception)
         app.openapi_schema = openapi_schema
-        analyze(app)
         return app.openapi_schema
 
     return _custom_openapi

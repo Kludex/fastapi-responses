@@ -2,15 +2,17 @@ import importlib
 import inspect
 import tokenize
 import typing
+from collections import defaultdict
 from inspect import iscoroutinefunction, isfunction
 from io import BytesIO
 from queue import LifoQueue
-from tokenize import TokenInfo
+from tokenize import Token, TokenInfo
 from types import FunctionType
-from typing import Generator
+from typing import Generator, Iterable, List, Tuple
 
 from fastapi import FastAPI
 from fastapi.params import Depends
+from fastapi.routing import APIRoute
 from starlette.exceptions import HTTPException
 
 
@@ -37,32 +39,49 @@ def is_function_or_coroutine(obj):
     return isfunction(obj) or iscoroutinefunction(obj)
 
 
-def analyze(app: FastAPI):
-    for route in app.routes:
-        if getattr(route, "include_in_schema", None):
-            stack = LifoQueue()
-            stack.put(getattr(route, "endpoint"))
-            while not stack.empty():
-                endpoint = stack.get()
-                for dependency in get_dependencies(endpoint):
-                    stack.put(dependency)
-                source = inspect.getsource(endpoint)
-                module = importlib.import_module(endpoint.__module__)
-                tokens = tokenize.tokenize(BytesIO(source.encode("utf-8")).readline)
-                try:
-                    while True:
-                        token = next(tokens)
-                        try:
-                            obj = getattr(module, token.string)
-                            if inspect.isclass(obj):
-                                statement = build_statement(token, tokens)
-                                http_exc = eval(statement)
-                                if isinstance(http_exc, HTTPException):
-                                    print(repr(http_exc))
-                            if is_function_or_coroutine(obj) and obj is not endpoint:
-                                stack.put(obj)
-                        except Exception:
-                            continue
-                except StopIteration:
-                    ...
-    print()
+def exceptions_functions(
+    endpoint: callable, tokens: Iterable[TokenInfo]
+) -> Tuple[List[Exception], List[callable]]:
+    exceptions, functions = [], []
+    module = importlib.import_module(endpoint.__module__)
+    try:
+        while True:
+            token = next(tokens)
+            try:
+                obj = getattr(module, token.string)
+                if inspect.isclass(obj):
+                    statement = build_statement(token, tokens)
+                    http_exc = eval(statement)
+                    if isinstance(http_exc, HTTPException):
+                        exceptions.append(http_exc)
+                if is_function_or_coroutine(obj) and obj is not endpoint:
+                    functions.append(obj)
+            except Exception:
+                ...
+    except StopIteration:
+        ...
+    return exceptions, functions
+
+
+def extract_exceptions(route: APIRoute) -> List[HTTPException]:
+    exceptions = []
+    functions = []
+    functions.append(getattr(route, "endpoint"))
+    while len(functions) > 0:
+        endpoint = functions.pop()
+        source = inspect.getsource(endpoint)
+        tokens = tokenize.tokenize(BytesIO(source.encode("utf-8")).readline)
+        _exceptions, _functions = exceptions_functions(endpoint, tokens)
+        exceptions.extend(_exceptions)
+        functions.extend(_functions)
+    return exceptions
+
+
+def write_response(api_schema: dict, route: APIRoute, exc: HTTPException) -> None:
+    path = getattr(route, "path")
+    methods = [method.lower() for method in getattr(route, "methods")]
+    for method in methods:
+        if str(exc.status_code) not in api_schema["paths"][path][method]["responses"]:
+            api_schema["paths"][path][method]["responses"][exc.status_code] = {
+                "description": exc.detail
+            }
