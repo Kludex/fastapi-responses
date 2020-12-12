@@ -3,20 +3,20 @@
 </h1>
 <p align="center">
     <a href="https://github.com/Kludex/fastapi-responses" target="_blank">
-        <img src="https://img.shields.io/github/last-commit/Kludex/fastapi-responses?style=for-the-badge" alt="Latest Commit">
+        <img src="https://img.shields.io/github/last-commit/Kludex/fastapi-responses" alt="Latest Commit">
     </a>
-        <!-- <img src="https://img.shields.io/github/workflow/status/ycd/manage-fastapi/Test?style=for-the-badge"> -->
-        <img src="https://img.shields.io/codecov/c/github/Kludex/fastapi-responses?style=for-the-badge">
+        <img src="https://img.shields.io/github/workflow/status/Kludex/fastapi-responses/Test">
+        <img src="https://img.shields.io/codecov/c/github/Kludex/fastapi-responses">
     <br />
-    <!-- <a href="https://pypi.org/project/manage-fastapi" target="_blank">
-        <img src="https://img.shields.io/pypi/v/manage-fastapi?style=for-the-badge" alt="Package version">
-    </a> -->
-    <!-- <img src="https://img.shields.io/pypi/pyversions/manage-fastapi?style=for-the-badge"> -->
-    <img src="https://img.shields.io/github/license/Kludex/fastapi-responses?style=for-the-badge">
+    <a href="https://pypi.org/project/fastapi-responses" target="_blank">
+        <img src="https://img.shields.io/pypi/v/fastapi-responses" alt="Package version">
+    </a>
+    <img src="https://img.shields.io/pypi/pyversions/fastapi-responses">
+    <img src="https://img.shields.io/github/license/Kludex/fastapi-responses">
 </p>
 
 <p align="center">
-    This package is not stable. Do not use in production!
+    <strong>This package is not stable. Do not use in production!</strong>
 </p>
 
 The goal of this package is to have your responses up-to-date according to your exceptions.
@@ -44,6 +44,6 @@ def get_item(item_id: int):
     return "Item exists!"
 ```
 
-## license
+## License
 
 This project is licensed under the terms of the MIT license.
