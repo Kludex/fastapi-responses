@@ -2,3 +2,7 @@
 .**_cache
 openapi.json
 dist
+
+# Coverage
+.coverage
+coverage.xml

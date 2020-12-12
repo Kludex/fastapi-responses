@@ -7,3 +7,7 @@ lint:  ## Linter the code.
 	isort fastapi_responses tests --check
 	flake8 .
 	mypy .
+
+.PHONY: test
+test:  ## Test your code.
+	poetry run pytest tests/ --cov=fastapi_responses --cov-report=term-missing:skip-covered --cov-report=xml
