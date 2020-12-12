@@ -19,17 +19,17 @@
     <strong>This package is not stable. Do not use in production!</strong>
 </p>
 
-The goal of this package is to have your responses up-to-date according to your exceptions.
+Find **HTTPException**s and turn them into documented **responses**. :tada:
 
 ## Installation
 
-```bash
+``` bash
 pip install fastapi-responses
 ```
 
 ## Usage
 
-```python
+``` python
 from fastapi import FastAPI, HTTPException
 from fastapi_responses import custom_openapi
 
@@ -43,6 +43,14 @@ def get_item(item_id: int):
         raise HTTPException(status_code=404, detail="Item not found.")
     return "Item exists!"
 ```
+
+### Without FastAPI Responses
+
+<img src="./assets/without.jpg" width="1000" title="Without FastAPI responses">
+
+### With FastAPI Responses
+
+<img src="./assets/with.jpg" width="1000" title="With FastAPI responses">
 
 ## License
 
