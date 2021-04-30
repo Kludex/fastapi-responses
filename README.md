@@ -15,7 +15,9 @@
     <img src="https://img.shields.io/github/license/Kludex/fastapi-responses">
 </p>
 
-Find **HTTPException**s and turn them into documented **responses**. :tada:
+<p align="center">
+    Find <b>HTTPException</b>s and turn them into documented <b>responses</b>. :tada:
+</p>
 
 ## Installation
 
