@@ -15,10 +15,6 @@
     <img src="https://img.shields.io/github/license/Kludex/fastapi-responses">
 </p>
 
-<p align="center">
-    <strong>This package is not stable. Do not use in production!</strong>
-</p>
-
 Find **HTTPException**s and turn them into documented **responses**. :tada:
 
 ## Installation
