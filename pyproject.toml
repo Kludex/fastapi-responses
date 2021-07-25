@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "fastapi-responses"
-version = "0.2.0"
+version = "0.2.1"
 description = "Extend OpenAPI schema to collect HTTPExceptions."
 authors = ["Marcelo Trylesinski <marcelotryle@gmail.com>"]
 readme = "README.md"
@@ -23,7 +23,7 @@ classifiers = [
 
 [tool.poetry.dependencies]
 python = "^3.6.1"
-fastapi = "^0.62.0"
+fastapi = ">=0.62.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
