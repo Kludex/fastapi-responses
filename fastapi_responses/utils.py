@@ -70,3 +70,16 @@ def write_response(api_schema: dict, route: APIRoute, exc: HTTPException) -> Non
             api_schema["paths"][path][method]["responses"][status_code] = {
                 "description": exc.detail
             }
+        else:
+            count = get_status_code_count(
+                api_schema["paths"][path][method]["responses"], status_code, 1
+            )
+            api_schema["paths"][path][method]["responses"][f"{status_code}.{count}"] = {
+                "description": exc.detail
+            }
+
+
+def get_status_code_count(status_code_list, status_code, counter):
+    if (f"{status_code}.{counter}") not in status_code_list:
+        return counter
+    return get_status_code_count(status_code_list, status_code, counter + 1)
