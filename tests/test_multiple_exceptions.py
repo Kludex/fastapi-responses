@@ -67,6 +67,7 @@ openapi_schema = {
                             "I need a really long sentence so I can analyze..."
                         )
                     },
+                    "200.1": {"description": "Another function!"},
                     "201": {"description": "HAHA"},
                     "304": {"description": "Yet another function!"},
                 },
