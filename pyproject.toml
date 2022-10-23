@@ -23,18 +23,18 @@ classifiers = [
 
 [tool.poetry.dependencies]
 python = "^3.6.1"
-fastapi = ">=0.62.0"
+# fastapi = ">=0.62.0"
 
-[tool.poetry.dev-dependencies]
-pytest = "^5.2"
-black = "^20.8b1"
-flake8 = "^3.8.4"
-autoflake = "^1.4"
-isort = "^5.0"
-pytest-cov = "^2.10.1"
-pre-commit = "^2.9.3"
-mypy = "^0.790"
-requests = "^2.25.0"
+# [tool.poetry.dev-dependencies]
+# pytest = "^5.2"
+# black = "^20.8b1"
+# flake8 = "^3.8.4"
+# autoflake = "^1.4"
+# isort = "^5.0"
+# pytest-cov = "^2.10.1"
+# pre-commit = "^2.9.3"
+# mypy = "^0.790"
+# requests = "^2.25.0"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
