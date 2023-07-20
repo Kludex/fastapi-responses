@@ -22,8 +22,8 @@ classifiers = [
 ]
 
 [tool.poetry.dependencies]
-python = "^3.6.1"
-fastapi = ">=0.62.0"
+python = ">=3.7,<4.0.0"
+fastapi = ">=0.100.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
@@ -33,9 +33,9 @@ autoflake = "^1.4"
 isort = "^5.0"
 pytest-cov = "^2.10.1"
 pre-commit = "^2.9.3"
-mypy = "^0.790"
+mypy = "^1.4.1"
 requests = "^2.25.0"
 
 [build-system]
-requires = ["poetry-core>=1.0.0"]
+requires = ["poetry-core>=1.6.1"]
 build-backend = "poetry.core.masonry.api"
