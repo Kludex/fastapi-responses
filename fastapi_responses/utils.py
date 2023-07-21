@@ -1,8 +1,11 @@
 from importlib import import_module
 from inspect import getsource, iscoroutinefunction, isfunction
+from libcst._nodes.expression import Call
+from libcst._nodes.module import Module
 import re
-from typing import Callable, Dict, List, Tuple
+from typing import Dict, List, Tuple
 
+from fastapi import FastAPI, Depends
 from fastapi.routing import APIRoute
 import libcst as cst
 from starlette.exceptions import HTTPException
@@ -33,65 +36,53 @@ def generate_args(status_code: str, detail: str) -> Tuple[int, str]:
     return (status_code_f, detail_f)
 
 
-def exceptions_functions(
-    endpoint: Callable,
-    tree: cst._nodes.module.Module
-) -> Tuple[List[HTTPException], List[Callable]]:
-    stack = []
-    module = import_module(endpoint.__module__)
-    exceptions, functions = [], []
-    stack.append(tree.body)
+class GetHTTPExceptions(cst.CSTVisitor):
+    def __init__(self, endpoint):
+        self.http_exceptions: List[HTTPException]
+        self.route_exceptions: List[HTTPException] = []
+        self.current_module_functions: List
+        self.route_functions = []
+        self.endpoint = endpoint
+        self.module = import_module(self.endpoint.__module__)
 
-    while stack:
-        current = stack.pop()
 
-        if isinstance(current, tuple):
-            for node in current:
-                stack.append(node)
+    def visit_Module(self, node: Module) -> bool | None:
+        self.current_module_functions = []
+        self.http_exceptions = []
+
+
+    def leave_Module(self, node: Module) -> List:
+        self.route_functions.extend(self.current_module_functions)
+        self.route_exceptions.extend(self.http_exceptions)
+
+
+    def visit_Call(self, node: Call) -> bool | None:
+        if node.func.value == 'HTTPException':
+            temp = generate_args(node.args[0].value.value, node.args[1].value.value)
+            temp_HTTPException = HTTPException(temp[0], temp[1])
+            self.http_exceptions.append(temp_HTTPException)
+        
         else:
-            if isinstance(current, cst._nodes.statement.Raise):
-                if current.exc.func.value == 'HTTPException':
-                    if getattr(current.exc.args[0].value, "attr", None):
-                        _code = current.exc.args[0].value
-                        code = _code.value.value + "." + _code.attr.value
-                    else:
-                        code = current.exc.args[0].value.value 
-                    detail = current.exc.args[1].value.value
-                    temp = generate_args(code, detail)
-                    exceptions.append(HTTPException(temp[0], temp[1]))
-            else:
-                if isinstance(current, cst._nodes.statement.Expr):
-                    functions.append(getattr(module, current.value.func.value))
-                    continue
-                if isinstance(current, cst._nodes.statement.FunctionDef):
-                    params = current.params.params
-                    for param in params:
-                        if isinstance(param.default, cst._nodes.expression.Call):
-                            for arg in param.default.args:
-                                obj = getattr(module, arg.value.value)
-                                if is_function_or_coroutine(obj):
-                                    functions.append(obj)
-                condition_1 = isinstance(current, cst._nodes.base.CSTNode)
-                condition_2 = isinstance(
-                    current, cst._nodes.statement.BaseSmallStatement
-                    )
-                if condition_1 and not condition_2:
-                    stack.append(current.body)
-    
-    return exceptions, functions
+            if isinstance(node.func.value, str):
+                if node.func.value != 'Depends':
+                    current_function_name = node.func.value
+                else:
+                    current_function_name = node.args[0].value.value
+                self.current_module_functions.append(getattr(self.module, current_function_name))
 
 
 def extract_exceptions(route: APIRoute) -> List[HTTPException]:
-    exceptions = []
     functions = []
+    exceptions = []
     functions.append(getattr(route, "endpoint"))
     while len(functions) > 0:
         endpoint = functions.pop()
+        visitor = GetHTTPExceptions(endpoint)
         source = getsource(endpoint)
         tree = cst.parse_module(source)
-        _exceptions, _functions = exceptions_functions(endpoint, tree)
-        exceptions.extend(_exceptions)
-        functions.extend(_functions)
+        tree.visit(visitor)
+        exceptions.extend(visitor.http_exceptions)
+        functions.extend(visitor.current_module_functions)
     return exceptions
 
 
