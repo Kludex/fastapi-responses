@@ -38,22 +38,9 @@ def generate_args(status_code: str, detail: str) -> Tuple[int, str]:
 
 class GetHTTPExceptions(cst.CSTVisitor):
     def __init__(self, endpoint):
-        self.http_exceptions: List[HTTPException]
-        self.route_exceptions: List[HTTPException] = []
-        self.current_module_functions: List
-        self.route_functions = []
-        self.endpoint = endpoint
-        self.module = import_module(self.endpoint.__module__)
-
-
-    def visit_Module(self, node: Module) -> bool | None:
+        self.http_exceptions: List[HTTPException] = []
         self.current_module_functions = []
-        self.http_exceptions = []
-
-
-    def leave_Module(self, node: Module) -> List:
-        self.route_functions.extend(self.current_module_functions)
-        self.route_exceptions.extend(self.http_exceptions)
+        self.module = import_module(endpoint.__module__)
 
 
     def visit_Call(self, node: Call) -> bool | None:
