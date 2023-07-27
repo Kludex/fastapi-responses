@@ -16,13 +16,14 @@ classifiers = [
     "Programming Language :: Python :: 3",
     "Programming Language :: Python",
     "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.6",
-    "Programming Language :: Python :: 3.7",
     "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
 ]
 
 [tool.poetry.dependencies]
-python = "^3.6.1"
+python = "^3.8.1"
 fastapi = ">=0.62.0"
 
 [tool.poetry.dev-dependencies]
@@ -33,7 +34,7 @@ autoflake = "^1.4"
 isort = "^5.0"
 pytest-cov = "^2.10.1"
 pre-commit = "^2.9.3"
-mypy = "^0.790"
+mypy = "^1.4.1"
 requests = "^2.25.0"
 
 [build-system]
