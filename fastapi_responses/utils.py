@@ -8,10 +8,6 @@ from libcst._nodes.expression import Call, Integer
 from starlette.exceptions import HTTPException
 
 
-def is_function_or_coroutine(obj):
-    return isfunction(obj) or iscoroutinefunction(obj)
-
-
 def generate_args(status_code: str, detail: str) -> Tuple[int, str]:
     detail_f = detail[1:-1]
     status_code_f = int(status_code)
