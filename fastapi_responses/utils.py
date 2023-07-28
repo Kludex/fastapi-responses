@@ -39,7 +39,7 @@ class GetHTTPExceptions(cst.CSTVisitor):
         self.current_module_functions = []
         self.module = import_module(endpoint.__module__)
 
-    def visit_Call(self, node: Call) -> bool | None:
+    def visit_Call(self, node: Call):
         if node.func.value == "HTTPException":
             temp = generate_args(node.args[0].value.value, node.args[1].value.value)
             temp_HTTPException = HTTPException(temp[0], temp[1])
