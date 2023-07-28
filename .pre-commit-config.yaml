@@ -1,6 +1,6 @@
 repos:
   - repo: https://github.com/myint/autoflake
-    rev: v1.4
+    rev: v2.2.0
     hooks:
       - id: autoflake
         args:
@@ -10,11 +10,15 @@ repos:
           - --remove-duplicate-keys
           - --remove-unused-variables
   - repo: https://github.com/pre-commit/mirrors-isort
-    rev: v5.4.2
+    rev: v5.10.1
     hooks:
       - id: isort
         args: ["--profile", "black"]
   - repo: https://github.com/psf/black
-    rev: 20.8b1
+    rev: 23.7.0
     hooks:
       - id: black
+  - repo: https://github.com/asottile/pyupgrade
+    rev: v3.9.0
+    hooks:
+      - id: pyupgrade
