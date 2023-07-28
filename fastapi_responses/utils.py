@@ -1,14 +1,11 @@
-import re
 from importlib import import_module
 from inspect import getsource, iscoroutinefunction, isfunction
 from typing import Dict, List, Tuple
 
 import libcst as cst
 from fastapi.routing import APIRoute
-from libcst._nodes.expression import Call
+from libcst._nodes.expression import Call, Integer
 from starlette.exceptions import HTTPException
-
-http_codes = [200, 201, 204, 304, 400, 403, 404, 409, 500]
 
 
 def is_function_or_coroutine(obj):
@@ -16,20 +13,9 @@ def is_function_or_coroutine(obj):
 
 
 def generate_args(status_code: str, detail: str) -> Tuple[int, str]:
-    detail_temp = []
-    detail_temp.append(re.findall("'([^']*)'", detail))
-    detail_temp.append(re.findall('"([^"]*)"', detail))
+    detail_f = detail[1:-1]
+    status_code_f = int(status_code)
 
-    for i in detail_temp:
-        if i:
-            detail_f = i[0]
-
-    if len(status_code) == 3:
-        status_code_f = int(status_code)
-    else:
-        for code in http_codes:
-            if str(code) in status_code:
-                status_code_f = code
     return (status_code_f, detail_f)
 
 
@@ -41,8 +27,14 @@ class GetHTTPExceptions(cst.CSTVisitor):
 
     def visit_Call(self, node: Call):
         if node.func.value == "HTTPException":
-            temp = generate_args(node.args[0].value.value, node.args[1].value.value)
-            temp_HTTPException = HTTPException(temp[0], temp[1])
+            if isinstance(node.args[0].value, Integer):
+                status_temp = node.args[0].value.value
+            else:
+                status_temp = node.args[0].value.attr.value[5:8]
+            detail_temp = node.args[1].value.value
+
+            status, detail = generate_args(status_temp, detail_temp)
+            temp_HTTPException = HTTPException(status, detail)
             self.http_exceptions.append(temp_HTTPException)
 
         else:
