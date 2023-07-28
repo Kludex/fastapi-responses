@@ -12,8 +12,7 @@ app.openapi = custom_openapi(app)
 def get_item(item_id: int):
     if item_id == 0:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Item not found."
+            status_code=status.HTTP_404_NOT_FOUND, detail="Item not found."
         )
     return "Item exists!"
 
