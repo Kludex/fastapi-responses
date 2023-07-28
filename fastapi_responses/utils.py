@@ -1,67 +1,65 @@
-import importlib
-import inspect
-import tokenize
-from inspect import iscoroutinefunction, isfunction
-from io import BytesIO
-from tokenize import TokenInfo
-from typing import Callable, Generator, List, Tuple
+from importlib import import_module
+from inspect import getsource, iscoroutinefunction, isfunction
+from typing import Dict, List, Tuple
 
+import libcst as cst
 from fastapi.routing import APIRoute
+from libcst._nodes.expression import Call, Integer
 from starlette.exceptions import HTTPException
 
 
-def build_statement(exc: TokenInfo, tokens: Generator[TokenInfo, None, None]) -> str:
-    statement = exc.string
-    while True:
-        token = next(tokens)
-        statement += token.string.replace("\n", "")
-        if token.type == tokenize.NEWLINE:
-            return statement
+def generate_args(status_code: str, detail: str) -> Tuple[int, str]:
+    detail_f = detail[1:-1]
+    status_code_f = int(status_code)
+
+    return (status_code_f, detail_f)
 
 
-def is_function_or_coroutine(obj):
-    return isfunction(obj) or iscoroutinefunction(obj)
+class GetHTTPExceptions(cst.CSTVisitor):
+    def __init__(self, endpoint):
+        self.http_exceptions: List[HTTPException] = []
+        self.current_module_functions = []
+        self.module = import_module(endpoint.__module__)
 
+    def visit_Call(self, node: Call):
+        if node.func.value == "HTTPException":
+            if isinstance(node.args[0].value, Integer):
+                status_temp = node.args[0].value.value
+            else:
+                status_temp = node.args[0].value.attr.value[5:8]
+            detail_temp = node.args[1].value.value
 
-def exceptions_functions(
-    endpoint: Callable, tokens: Generator[TokenInfo, None, None]
-) -> Tuple[List[Exception], List[Callable]]:
-    exceptions, functions = [], []
-    module = importlib.import_module(endpoint.__module__)
-    try:
-        while True:
-            token = next(tokens)
-            try:
-                obj = getattr(module, token.string)
-                if inspect.isclass(obj):
-                    statement = build_statement(token, tokens)
-                    http_exc = eval(statement)
-                    if isinstance(http_exc, HTTPException):
-                        exceptions.append(http_exc)
-                if is_function_or_coroutine(obj) and obj is not endpoint:
-                    functions.append(obj)
-            except Exception:
-                ...
-    except StopIteration:
-        ...
-    return exceptions, functions
+            status, detail = generate_args(status_temp, detail_temp)
+            temp_HTTPException = HTTPException(status, detail)
+            self.http_exceptions.append(temp_HTTPException)
+
+        else:
+            if isinstance(node.func.value, str):
+                if node.func.value != "Depends":
+                    current_function_name = node.func.value
+                else:
+                    current_function_name = node.args[0].value.value
+                self.current_module_functions.append(
+                    getattr(self.module, current_function_name)
+                )
 
 
 def extract_exceptions(route: APIRoute) -> List[HTTPException]:
-    exceptions = []
     functions = []
+    exceptions = []
     functions.append(getattr(route, "endpoint"))
     while len(functions) > 0:
         endpoint = functions.pop()
-        source = inspect.getsource(endpoint)
-        tokens = tokenize.tokenize(BytesIO(source.encode("utf-8")).readline)
-        _exceptions, _functions = exceptions_functions(endpoint, tokens)
-        exceptions.extend(_exceptions)
-        functions.extend(_functions)
+        visitor = GetHTTPExceptions(endpoint)
+        source = getsource(endpoint)
+        tree = cst.parse_module(source)
+        tree.visit(visitor)
+        exceptions.extend(visitor.http_exceptions)
+        functions.extend(visitor.current_module_functions)
     return exceptions
 
 
-def write_response(api_schema: dict, route: APIRoute, exc: HTTPException) -> None:
+def write_response(api_schema: Dict, route: APIRoute, exc: HTTPException) -> None:
     path = getattr(route, "path")
     methods = [method.lower() for method in getattr(route, "methods")]
     for method in methods:
