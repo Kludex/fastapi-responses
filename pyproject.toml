@@ -33,10 +33,10 @@ flake8 = "^3.8.4"
 autoflake = "^1.4"
 isort = "^5.0"
 pytest-cov = "^2.10.1"
-pre-commit = "^2.9.3"
+pre-commit = "^3.3.3"
 mypy = "^1.4.1"
 requests = "^2.25.0"
 
 [build-system]
-requires = ["poetry-core>=1.0.0"]
+requires = ["poetry-core>=1.6.1"]
 build-backend = "poetry.core.masonry.api"
