@@ -18,3 +18,7 @@ repos:
     rev: 20.8b1
     hooks:
       - id: black
+  - repo: https://github.com/asottile/pyupgrade#as-a-pre-commit-hook
+    rev: v3.9.0
+    hooks:
+      - id: pyupgrade
