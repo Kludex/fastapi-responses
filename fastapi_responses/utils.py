@@ -1,13 +1,12 @@
+import re
 from importlib import import_module
 from inspect import getsource, iscoroutinefunction, isfunction
-from libcst._nodes.expression import Call
-import re
 from typing import Dict, List, Tuple
 
-from fastapi.routing import APIRoute
 import libcst as cst
+from fastapi.routing import APIRoute
+from libcst._nodes.expression import Call
 from starlette.exceptions import HTTPException
-
 
 http_codes = [200, 201, 204, 304, 400, 403, 404, 409, 500]
 
@@ -40,20 +39,21 @@ class GetHTTPExceptions(cst.CSTVisitor):
         self.current_module_functions = []
         self.module = import_module(endpoint.__module__)
 
-
     def visit_Call(self, node: Call) -> bool | None:
-        if node.func.value == 'HTTPException':
+        if node.func.value == "HTTPException":
             temp = generate_args(node.args[0].value.value, node.args[1].value.value)
             temp_HTTPException = HTTPException(temp[0], temp[1])
             self.http_exceptions.append(temp_HTTPException)
-        
+
         else:
             if isinstance(node.func.value, str):
-                if node.func.value != 'Depends':
+                if node.func.value != "Depends":
                     current_function_name = node.func.value
                 else:
                     current_function_name = node.args[0].value.value
-                self.current_module_functions.append(getattr(self.module, current_function_name))
+                self.current_module_functions.append(
+                    getattr(self.module, current_function_name)
+                )
 
 
 def extract_exceptions(route: APIRoute) -> List[HTTPException]:
@@ -80,4 +80,3 @@ def write_response(api_schema: Dict, route: APIRoute, exc: HTTPException) -> Non
             api_schema["paths"][path][method]["responses"][status_code] = {
                 "description": exc.detail
             }
-
