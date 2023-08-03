@@ -6,6 +6,7 @@ from io import BytesIO
 from tokenize import TokenInfo
 from typing import Callable, Generator, List, Tuple
 
+from fastapi import status
 from fastapi.routing import APIRoute
 from starlette.exceptions import HTTPException
 
