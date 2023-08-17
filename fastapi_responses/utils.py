@@ -1,13 +1,17 @@
 import ast
+import logging
 from dataclasses import dataclass
 from importlib import import_module
 from inspect import getsource, isclass, isfunction, signature
 from typing import Any, Callable, List, Type, Union
 
 import libcst as cst
+from fastapi import status
 from fastapi.params import Depends
 from fastapi.routing import APIRoute
 from starlette.exceptions import HTTPException
+
+logger = logging.getLogger("fastapi_responses")
 
 
 @dataclass
@@ -31,7 +35,11 @@ def get_args_with_parentheses(
     detail = None
     for arg in node_exp.args:
         if isinstance(arg.keyword, cst.Name) and arg.keyword.value == "status_code":
-            status_code = arg.value.value
+            if isinstance(arg.value, cst.Attribute):
+                attr_value = getattr(status, arg.value.attr.value)
+                status_code = attr_value
+            else:
+                status_code = arg.value.value
 
         elif isinstance(arg.keyword, cst.Name) and arg.keyword.value == "detail":
             detail = ast.literal_eval(arg.value.value)
@@ -42,7 +50,7 @@ def get_args_with_parentheses(
     if is_exception and not detail:
         detail = exception_class().detail
 
-    if isinstance(status_code, str):
+    if isinstance(status_code, (str, int)):
         return ExceptionArgs(int(status_code), detail, exception_class)
     return None
 
@@ -103,7 +111,6 @@ class RouterExceptionVisitor(cst.CSTVisitor):
                         self.functions_to_visit.append(func_or_class)
 
     def visit_Raise(self, node: cst.Raise):
-        # Check if the exception is being raised with parentheses
         assert node.exc is not None
         strategy = NODE_TO_PARSE.get(type(node.exc), None)
         assert strategy is not None
@@ -112,6 +119,21 @@ class RouterExceptionVisitor(cst.CSTVisitor):
             temp_HTTPException: HTTPException = result.exception_class(
                 result.status_code, result.detail
             )
+            self.http_exceptions.append(temp_HTTPException)
+
+    def visit_Assign(self, node: cst.Assign) -> None:
+        ...
+        module = import_module(self.module.__name__)
+        status_code, detail = None, None
+        for arg in node.value.args:
+            if type(arg.value) == cst.Integer:
+                status_code = arg.value.value
+            elif type(arg.value) == cst.SimpleString:
+                detail = arg.value.value
+
+        exception = getattr(module, node.value.func.value, None)
+        if exception and status_code:
+            temp_HTTPException: HTTPException = exception(status_code, detail)
             self.http_exceptions.append(temp_HTTPException)
 
 
@@ -124,18 +146,13 @@ def extract_exceptions(
 
     while len(stack) > 0:
         func_or_class = stack.pop()
-        sig = signature(func_or_class)
-        for value in sig.parameters.values():
-            if "Depends" in str(value) and hasattr(value.default, "dependency"):
-                dependency: Depends = value.default
-                stack.append(dependency.dependency)  # type: ignore
-
-        if func_or_class in visited:  # Skip if already visited
-            continue
-        visited.add(func_or_class)  # Mark as visited
         try:
+            sig = signature(func_or_class)
+            for value in sig.parameters.values():
+                if "Depends" in str(value) and hasattr(value.default, "dependency"):
+                    dependency: Depends = value.default
+                    stack.append(dependency.dependency)  # type: ignore
             source = getsource(func_or_class)
-            print(f"getting {func_or_class}")
             abstract_syntax_tree = cst.parse_module(source)
             visitor = RouterExceptionVisitor(func_or_class, base_exception)
             abstract_syntax_tree.visit(visitor)
@@ -145,23 +162,10 @@ def extract_exceptions(
                 f for f in visitor.functions_to_visit if f not in visited
             )  # Only add unvisited functions
         except Exception as error:
-            ...
-
-        print(f"NOW -> {len(http_exceptions)}")
-    print(f"VISITED {len(visited)}")
+            logger.debug(f"Error processing function {func_or_class} -> {error}")
+        finally:
+            visited.add(func_or_class)
     return http_exceptions
-
-
-# def extract_exceptions(
-#     endpoint: Callable[..., Any], base_exception=HTTPException
-# ) -> List[HTTPException]:
-#     visitor = RouterExceptionVisitor(endpoint, base_exception)
-#     while visitor.functions_to_visit:
-#         function = visitor.functions_to_visit.pop()
-#         source = getsource(function)
-#         abstract_syntax_tree = cst.parse_module(source)
-#         abstract_syntax_tree.visit(visitor)
-#     return visitor.http_exceptions
 
 
 def add_exception_to_openapi_schema(
@@ -188,3 +192,5 @@ def add_exception_to_openapi_schema(
             openapi_schema["paths"][path][method]["responses"][
                 status_code
             ] = response_schema
+
+    return None
