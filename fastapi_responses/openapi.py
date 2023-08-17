@@ -1,3 +1,5 @@
+from typing import Callable
+
 from fastapi import FastAPI
 from fastapi.routing import APIRoute
 from starlette.exceptions import HTTPException
@@ -5,7 +7,7 @@ from starlette.exceptions import HTTPException
 from fastapi_responses.utils import add_exception_to_openapi_schema, extract_exceptions
 
 
-def custom_openapi(app: FastAPI, base_exception=HTTPException):
+def custom_openapi(app: FastAPI, base_exception=HTTPException) -> Callable:
     def _custom_openapi():
         for route in app.routes:
             is_rest_api = isinstance(route, APIRoute)
