@@ -78,7 +78,7 @@ def test_exception_with_paranthesis_inside_router(prepare_test: dict):
     assert prepare_test.get("404")
 
 
-def test_exception_without_paranthesis_inside_router(prepare_test: dict):
+def test_exception_with_reffernced(prepare_test: dict):
     assert prepare_test.get("405")
 
 
