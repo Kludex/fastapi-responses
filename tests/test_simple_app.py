@@ -5,40 +5,21 @@ from fastapi_responses import custom_openapi
 
 app = FastAPI()
 
-app.openapi = custom_openapi(app)
-
 
 @app.get("/")
 def home():
     return "Hello World!"
 
 
-client = TestClient(app)
+app.openapi = custom_openapi(app)
 
-openapi_schema = {
-    "openapi": "3.1.0",
-    "info": {"title": "FastAPI", "version": "0.1.0"},
-    "paths": {
-        "/": {
-            "get": {
-                "summary": "Home",
-                "operationId": "home__get",
-                "responses": {
-                    "200": {
-                        "description": "Successful Response",
-                        "content": {"application/json": {"schema": {}}},
-                    }
-                },
-            }
-        }
-    },
-}
+
+client = TestClient(app)
 
 
 def test_simple_app():
     res = client.get("/")
     assert res.status_code == 200
-    openapi: dict = client.get("/openapi.json/").json()["paths"]["/"]["get"][
-        "responses"
-    ]
-    assert openapi.get("200")
+    openapi_json: dict = client.get("/openapi.json/").json()
+    openapi_dict: dict = openapi_json["paths"]["/"]["get"]["responses"]
+    assert openapi_dict.get("200")
