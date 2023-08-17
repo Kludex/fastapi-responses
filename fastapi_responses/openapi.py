@@ -1,26 +1,26 @@
 from typing import Callable
 
 from fastapi import FastAPI
-from fastapi.openapi.utils import get_openapi
+from fastapi.routing import APIRoute
+from starlette.exceptions import HTTPException
 
-from fastapi_responses.utils import extract_exceptions, write_response
+from fastapi_responses.utils import add_exception_to_openapi_schema, extract_exceptions
 
 
-def custom_openapi(app: FastAPI) -> Callable:
-    def _custom_openapi() -> dict:
-        if app.openapi_schema:  # pragma: no cover
-            return app.openapi_schema
-        openapi_schema = get_openapi(
-            title=app.title,
-            version=app.version,
-            description=app.description,
-            routes=app.routes,
-        )
+def custom_openapi(app: FastAPI, base_exception=HTTPException) -> Callable:
+    def _custom_openapi():
         for route in app.routes:
-            if getattr(route, "include_in_schema", None):
-                for exception in extract_exceptions(route):
-                    write_response(openapi_schema, route, exception)
-        app.openapi_schema = openapi_schema
+            is_rest_api = isinstance(route, APIRoute)
+            if is_rest_api:
+                found_exceptions = extract_exceptions(
+                    endpoint=route.endpoint,
+                    base_exception=base_exception,
+                )
+                for exception in found_exceptions:
+                    add_exception_to_openapi_schema(openapi_schema, route, exception)
         return app.openapi_schema
 
-    return _custom_openapi
+    openapi_schema = app.openapi()
+    app.openapi = _custom_openapi  # type: ignore
+    app.openapi_schema = _custom_openapi()
+    return app.openapi
