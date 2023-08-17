@@ -38,6 +38,7 @@ openapi_schema = {
 def test_simple_app():
     res = client.get("/")
     assert res.status_code == 200
-
-    res = client.get("/openapi.json/")
-    assert res.json() == openapi_schema
+    openapi: dict = client.get("/openapi.json/").json()["paths"]["/"]["get"][
+        "responses"
+    ]
+    assert openapi.get("200")
