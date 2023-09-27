@@ -1,4 +1,3 @@
-import http
 import importlib
 import inspect
 import tokenize
@@ -10,11 +9,6 @@ from typing import Callable, Generator, List, Tuple
 from fastapi import status
 from fastapi.routing import BaseRoute
 from starlette.exceptions import HTTPException
-
-HTTP_STATUS_CODES = {
-    code: http.HTTPStatus(code)
-    for code in http.HTTPStatus
-}
 
 
 def build_statement(exc: TokenInfo, tokens: Generator[TokenInfo, None, None]):
@@ -73,10 +67,6 @@ def write_response(api_schema: dict, route: BaseRoute, exc: HTTPException):
     methods = [method.lower() for method in getattr(route, "methods")]
     for method in methods:
         status_code = str(exc.status_code)
-        error = HTTP_STATUS_CODES.get(
-            exc.status_code,
-            http.HTTPStatus.BAD_REQUEST.value
-        )
         if status_code not in api_schema["paths"][path][method]["responses"]:
             api_schema["paths"][path][method]["responses"][status_code] = {
                 "description": exc.detail
