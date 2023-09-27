@@ -11,6 +11,11 @@ from fastapi import status
 from fastapi.routing import BaseRoute
 from starlette.exceptions import HTTPException
 
+HTTP_STATUS_CODES = {
+    code: http.HTTPStatus(code)
+    for code in http.HTTPStatus
+}
+
 
 def build_statement(exc: TokenInfo, tokens: Generator[TokenInfo, None, None]):
     statement = exc.string
@@ -68,11 +73,7 @@ def write_response(api_schema: dict, route: BaseRoute, exc: HTTPException):
     methods = [method.lower() for method in getattr(route, "methods")]
     for method in methods:
         status_code = str(exc.status_code)
-        http_status_codes = {
-            code: http.HTTPStatus(code)
-            for code in http.HTTPStatus
-        }
-        error = http_status_codes.get(
+        error = HTTP_STATUS_CODES.get(
             exc.status_code,
             http.HTTPStatus.BAD_REQUEST.value
         )
