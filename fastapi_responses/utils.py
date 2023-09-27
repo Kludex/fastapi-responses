@@ -78,12 +78,5 @@ def write_response(api_schema: dict, route: BaseRoute, exc: HTTPException):
         )
         if status_code not in api_schema["paths"][path][method]["responses"]:
             api_schema["paths"][path][method]["responses"][status_code] = {
-                "description": f"Error: {error.phrase} ({error.description})",
-                "content": {
-                    "application/json": {
-                        "schema": {
-                            "$ref": "#/components/schemas/HTTPValidationError"
-                        }
-                    }
-                }
+                "description": f"Error: {error.phrase} ({error.description})"
             }
